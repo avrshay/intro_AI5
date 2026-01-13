@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import gymnasium as gym
 import numpy as np
+import random
 
 SEED = 63
 
@@ -34,7 +35,8 @@ class Qlearning:
             reward (float): Reward received after taking the action
             new_state (int): New state reached after taking the action.
         """
-        pass
+        max_val=np.max(self.qtable[new_state])
+        self.qtable[state,action]=(1-self.learning_rate)*self.qtable[state,action]+self.learning_rate*(reward+self.gamma*max_val)
 
     def reset_qtable(self):
         """Reset the Q-table."""
@@ -42,8 +44,13 @@ class Qlearning:
 
     def select_epsilon_greedy_action(self, state: int) -> int:
         """Select an action from the Q-table."""
-        pass
-
+        # exploration
+        if rng.random() < self.epsilon:
+            return int(rng.integers(0, self.action_space_size))
+        # exploitation
+        max_q = np.max(self.qtable[state])
+        best_actions = np.where(self.qtable[state] == max_q)[0]
+        return int(rng.choice(best_actions))
     def train_episode(self, env: gym.Env) -> Tuple[float, int]:
         """Train the agent for a single episode.
 
@@ -54,7 +61,25 @@ class Qlearning:
         :param env: The environment to train the agent on.
         :return: the cumulative reward obtained during the episode and the number of steps executed in the episode.
         """
-        pass
+        state_cur, info = env.reset()
+        all_reward = 0.0
+        num_steps = 0
+        while True:
+            action = self.select_epsilon_greedy_action(state_cur)
+            new_state, reward, terminated, truncated, _ = env.step(action)
+
+            self.update(state_cur, action, reward, new_state)
+
+            all_reward += reward
+            num_steps += 1
+
+            state_cur = new_state
+
+            if terminated or truncated:
+                break
+
+        return all_reward, num_steps
+
 
     def run_environment(
         self, env: gym.Env, num_episodes: int
@@ -69,4 +94,15 @@ class Qlearning:
         Returns:
             A tuple (total_rewards, total_steps).
         """
-        pass
+        self.reset_qtable()
+        list_reward=[]
+        list_steps=[]
+        reward=0.0
+        steps=0
+        env.reset(seed=SEED)
+        for i in range(num_episodes):
+            reward,steps= self.train_episode(env)  #episode
+            list_steps.append(steps)
+            list_reward.append(reward)
+        return list_reward,list_steps
+

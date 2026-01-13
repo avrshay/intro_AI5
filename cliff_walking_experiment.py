@@ -19,6 +19,8 @@ params = Params(
 )
 
 if __name__ == "__main__":
+    params.savefig_folder.mkdir(parents=True, exist_ok=True)
+
     avg_rewards = []
     avg_steps = []
     env = gym.make(
@@ -26,8 +28,8 @@ if __name__ == "__main__":
         is_slippery=params.is_slippery,
         render_mode="rgb_array",
     )
-
     env.action_space.seed(params.seed)
+
     learner = Qlearning(
         learning_rate=params.learning_rate,
         gamma=params.gamma,
