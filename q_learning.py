@@ -97,8 +97,6 @@ class Qlearning:
         self.reset_qtable()
         list_reward=[]
         list_steps=[]
-        reward=0.0
-        steps=0
         env.reset(seed=SEED)
         for i in range(num_episodes):
             reward,steps= self.train_episode(env)  #episode
