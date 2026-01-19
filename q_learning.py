@@ -45,12 +45,14 @@ class Qlearning:
     def select_epsilon_greedy_action(self, state: int) -> int:
         """Select an action from the Q-table."""
         # exploration
-        if rng.random() < self.epsilon:
-            return int(rng.integers(0, self.action_space_size))
+        if random.random() <= self.epsilon:
+            return random.randrange(self.action_space_size)
+
         # exploitation
         max_q = np.max(self.qtable[state])
         best_actions = np.where(self.qtable[state] == max_q)[0]
-        return int(rng.choice(best_actions))
+        return random.choice(best_actions)
+
     def train_episode(self, env: gym.Env) -> Tuple[float, int]:
         """Train the agent for a single episode.
 
@@ -64,21 +66,16 @@ class Qlearning:
         state_cur, info = env.reset()
         all_reward = 0.0
         num_steps = 0
-        while True:
-            action = self.select_epsilon_greedy_action(state_cur)
-            new_state, reward, terminated, truncated, _ = env.step(action)
-
-            self.update(state_cur, action, reward, new_state)
-
-            all_reward += reward
-            num_steps += 1
-
-            state_cur = new_state
-
-            if terminated or truncated:
-                break
-
-        return all_reward, num_steps
+        terminated=False
+        truncated=False
+        while not (terminated or truncated):
+            action=self.select_epsilon_greedy_action(state_cur)
+            num_steps=num_steps+1
+            new_state, reward, terminated, truncated, info = env.step(action)
+            all_reward=all_reward+reward
+            self.update(state_cur,action,reward,new_state)  # update val
+            state_cur=new_state
+        return all_reward,num_steps
 
 
     def run_environment(
@@ -94,10 +91,10 @@ class Qlearning:
         Returns:
             A tuple (total_rewards, total_steps).
         """
-        self.reset_qtable()
         list_reward=[]
         list_steps=[]
-        env.reset(seed=SEED)
+        reward=0.0
+        steps=0
         for i in range(num_episodes):
             reward,steps= self.train_episode(env)  #episode
             list_steps.append(steps)
